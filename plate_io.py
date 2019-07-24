@@ -4,6 +4,7 @@ import piplates.DAQCplate as DP
 import piplates.DAQC2plate as DP2
 import piplates.RELAYplate as RP
 import piplates.MOTORplate as MP
+import piplates.THERMOplate as TP
 
 # All Pi Plate communication must go through this one process to ensure
 # SPI communications don't overlap / interfere and corrupt the device state(s)
@@ -133,6 +134,15 @@ while True:
             print(json.dumps(resp))
         elif (plate_type == "MOTOR"):
             break
+        elif (plate_type == "THERMO"):
+            if (cmd == "getTEMP"):
+                channel = args['channel']
+                value = TP.getTEMP(addr, channel)
+                resp['channel'] = channel
+                resp['value'] = value
+            else:
+                sys.stderr.write("unknown or unimplemented thermo cmd: " + cmd)
+            print(json.dumps(resp))
         else:
             sys.stderr.write("unknown plate_type: " + plate_type)
     except (EOFError, SystemExit):
