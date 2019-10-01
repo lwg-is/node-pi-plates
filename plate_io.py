@@ -140,6 +140,9 @@ while True:
                 value = TP.getTEMP(addr, channel)
                 resp['channel'] = channel
                 resp['value'] = value
+            elif (cmd == "getCOLD"):
+                value = TP.getCOLD(addr)
+                resp['value'] = value
             else:
                 sys.stderr.write("unknown or unimplemented thermo cmd: " + cmd)
             print(json.dumps(resp))
