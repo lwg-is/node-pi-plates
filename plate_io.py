@@ -129,6 +129,9 @@ while True:
                 resp['value'] = value
             elif (cmd == "calDAC"):
                 PP.calDAC(addr)
+            elif (cmd == "getFREQ" and plate_type == "DAQC2"):
+                value = DP2.getFREQ(addr)
+                resp['value'] = value
             else:
                 sys.stderr.write("unknown daqc(2) cmd: " + cmd)
             print(json.dumps(resp))
