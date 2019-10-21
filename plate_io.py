@@ -132,26 +132,10 @@ while True:
             elif (cmd == "getFREQ" and plate_type == "DAQC2"):
                 value = DP2.getFREQ(addr)
                 resp['value'] = value
-            elif (cmd == "setLED"):
-                # This API accepts string values based on the DAQC2 board API:
-                #
-                #     off, red, green, yellow, blue, magenta, cyan and white
-                #
-                # For DAQC board, these will be mapped to:
-                #
-                #    'off'    => red off + green off
-                #    'red'    => red on  + green off
-                #    'green'  => red off + green on
-                #     else    => red on  + green on
-                #
-
+            elif (cmd == "setLED" and plate_type == "DAQC"):
                 value = args['value']
 
-                if value not in ['off','red','green','yellow','blue','magenta','cyan','white']:
-                    sys.stderr.write("unknown LED color: " + value)
-                elif plate_type == "DAQC2":
-                    DP2.setLED(addr, value)
-                elif value == 'off':
+                if value == 'off':
                     DP.clrLED(addr, 0)
                     DP.clrLED(addr, 1)
                 elif value == 'red':
@@ -160,12 +144,22 @@ while True:
                 elif value == 'green':
                     DP.clrLED(addr, 0)
                     DP.setLED(addr, 1)
-                else:
+                elif value == 'yellow':
                     DP.setLED(addr, 0)
                     DP.setLED(addr, 1)
+                else:
+                    sys.stderr.write("unsupported LED color: " + value)
 
                 resp['value'] = value
+            elif (cmd == "setLED" and plate_type == "DAQC2"):
+                value = args['value']
 
+                if value in ['off','red','green','yellow','blue','magenta','cyan','white']:
+                    DP2.setLED(addr, value)
+                else:
+                    sys.stderr.write("unsupported LED color: " + value)
+
+                resp['value'] = value
             else:
                 sys.stderr.write("unknown daqc(2) cmd: " + cmd)
             print(json.dumps(resp))
