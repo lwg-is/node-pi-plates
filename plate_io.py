@@ -174,6 +174,15 @@ while True:
             elif (cmd == "getCOLD"):
                 value = TP.getCOLD(addr)
                 resp['value'] = value
+            elif (cmd == "setLED"):
+                TP.setLED(addr)
+                resp['LED'] = 1
+            elif (cmd == "clrLED"):
+                TP.clrLED(addr)
+                resp['LED'] = 0
+            elif (cmd == "toggleLED"):
+                TP.toggleLED(addr)
+                resp['LED'] = TP.getLED(addr)
             else:
                 sys.stderr.write("unknown or unimplemented thermo cmd: " + cmd)
             print(json.dumps(resp))
