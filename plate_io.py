@@ -133,33 +133,33 @@ while True:
                 value = DP2.getFREQ(addr)
                 resp['value'] = value
             elif (cmd == "setLED" and plate_type == "DAQC"):
-                value = args['value']
+                color = args['color']
 
-                if value == 'off':
+                if color == 'off':
                     DP.clrLED(addr, 0)
                     DP.clrLED(addr, 1)
-                elif value == 'red':
+                elif color == 'red':
                     DP.setLED(addr, 0)
                     DP.clrLED(addr, 1)
-                elif value == 'green':
+                elif color == 'green':
                     DP.clrLED(addr, 0)
                     DP.setLED(addr, 1)
-                elif value == 'yellow':
+                elif color == 'yellow':
                     DP.setLED(addr, 0)
                     DP.setLED(addr, 1)
                 else:
-                    sys.stderr.write("unsupported LED color: " + value)
+                    sys.stderr.write("unsupported LED color: " + color)
 
-                resp['value'] = value
+                resp['color'] = color
             elif (cmd == "setLED" and plate_type == "DAQC2"):
-                value = args['value']
+                color = args['color']
 
-                if value in ['off','red','green','yellow','blue','magenta','cyan','white']:
-                    DP2.setLED(addr, value)
+                if color in ['off','red','green','yellow','blue','magenta','cyan','white']:
+                    DP2.setLED(addr, color)
                 else:
-                    sys.stderr.write("unsupported LED color: " + value)
+                    sys.stderr.write("unsupported LED color: " + color)
 
-                resp['value'] = value
+                resp['color'] = color
             else:
                 sys.stderr.write("unknown daqc(2) cmd: " + cmd)
             print(json.dumps(resp))
