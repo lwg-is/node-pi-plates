@@ -129,6 +129,37 @@ while True:
                 resp['value'] = value
             elif (cmd == "calDAC"):
                 PP.calDAC(addr)
+            elif (cmd == "getFREQ" and plate_type == "DAQC2"):
+                value = DP2.getFREQ(addr)
+                resp['value'] = value
+            elif (cmd == "setLED" and plate_type == "DAQC"):
+                color = args['color']
+
+                if color == 'off':
+                    DP.clrLED(addr, 0)
+                    DP.clrLED(addr, 1)
+                elif color == 'red':
+                    DP.setLED(addr, 0)
+                    DP.clrLED(addr, 1)
+                elif color == 'green':
+                    DP.clrLED(addr, 0)
+                    DP.setLED(addr, 1)
+                elif color == 'yellow':
+                    DP.setLED(addr, 0)
+                    DP.setLED(addr, 1)
+                else:
+                    sys.stderr.write("unsupported LED color: " + color)
+
+                resp['color'] = color
+            elif (cmd == "setLED" and plate_type == "DAQC2"):
+                color = args['color']
+
+                if color in ['off','red','green','yellow','blue','magenta','cyan','white']:
+                    DP2.setLED(addr, color)
+                else:
+                    sys.stderr.write("unsupported LED color: " + color)
+
+                resp['color'] = color
             else:
                 sys.stderr.write("unknown daqc(2) cmd: " + cmd)
             print(json.dumps(resp))
@@ -140,6 +171,18 @@ while True:
                 value = TP.getTEMP(addr, channel)
                 resp['channel'] = channel
                 resp['value'] = value
+            elif (cmd == "getCOLD"):
+                value = TP.getCOLD(addr)
+                resp['value'] = value
+            elif (cmd == "setLED"):
+                TP.setLED(addr)
+                resp['LED'] = 1
+            elif (cmd == "clrLED"):
+                TP.clrLED(addr)
+                resp['LED'] = 0
+            elif (cmd == "toggleLED"):
+                TP.toggleLED(addr)
+                resp['LED'] = TP.getLED(addr)
             else:
                 sys.stderr.write("unknown or unimplemented thermo cmd: " + cmd)
             print(json.dumps(resp))
