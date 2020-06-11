@@ -5,6 +5,7 @@ import piplates.DAQC2plate as DP2
 import piplates.RELAYplate as RP
 import piplates.MOTORplate as MP
 import piplates.THERMOplate as TP
+import piplates.TINKERplate as TINK
 
 # All Pi Plate communication must go through this one process to ensure
 # SPI communications don't overlap / interfere and corrupt the device state(s)
@@ -64,6 +65,11 @@ while True:
             elif (cmd == "RESET"):
                 RP.RESET(addr)
                 resp['RESET'] = "OK";
+            elif (cmd == "VERIFY"):
+                if(RP.getADDR(addr) == addr):
+                    resp['state'] = 1
+                else:
+                    resp['state'] = 0
             else:
                 sys.stderr.write("unknown relay cmd: " + cmd)
                 break
@@ -99,7 +105,7 @@ while True:
                 voltage = PP.getADC(addr, channel)
                 resp['channel'] = channel
                 resp['voltage'] = voltage
-            elif (cmd == "getTEMP"):
+            elif (cmd == "getTEMP" and plate_type == "DAQC"):
                 bit = args['bit']
                 scale = args['scale']
                 temp = PP.getTEMP(addr, bit, scale)
@@ -119,7 +125,7 @@ while True:
             elif (cmd == "getPWM"):
                 channel = args['channel']
                 value = PP.getPWM(addr, channel)
-                resp['channel'] = channel
+                resp['channgetel'] = channel
                 resp['value'] = value
             elif (cmd == "setPWM"):
                 channel = args['channel']
@@ -160,6 +166,17 @@ while True:
                     sys.stderr.write("unsupported LED color: " + color)
 
                 resp['color'] = color
+            elif (cmd == "VERIFY" and plate_type == "DAQC"):
+                #For some reason the DAQC plate's getADDR method adds 8 to the address.
+                if(DP.getADDR(addr) - 8 == addr):
+                    resp['state'] = 1
+                else:
+                    resp['state'] = 0
+            elif (cmd == "VERIFY" and plate_type == "DAQC2"):
+                if(DP2.getADDR(addr) == addr):
+                    resp['state'] = 1
+                else:
+                    resp['state'] = 0
             else:
                 sys.stderr.write("unknown daqc(2) cmd: " + cmd)
             print(json.dumps(resp))
@@ -183,10 +200,72 @@ while True:
             elif (cmd == "toggleLED"):
                 TP.toggleLED(addr)
                 resp['LED'] = TP.getLED(addr)
+            elif (cmd == "VERIFY"):
+                if(TP.getADDR(addr) == addr):
+                    resp['state'] = 1
+                else:
+                    resp['state'] = 0
             else:
                 sys.stderr.write("unknown or unimplemented thermo cmd: " + cmd)
             print(json.dumps(resp))
+        elif (plate_type == "TINKER"):
+            if("relay" in cmd):
+                relay = args['relay']
+                if(cmd == "relayON"):
+                    TINK.relayON(addr, relay)
+                elif (cmd == "relayOFF"):
+                    TINK.relayOFF(addr, relay)
+                elif (cmd == "relayTOGGLE"):
+                    TINK.relayTOGGLE(addr, relay)
+                state = TINK.relaySTATE(addr, relay)
+                resp['relay'] = relay
+                resp['state'] = state
+            elif("DOUT" in cmd):
+                chan = args['bit']
+                if(cmd == "setDOUTbit"):
+                    TINK.setDOUT(addr, chan)
+                    resp['state'] = 1
+                elif(cmd == "clrDOUTbit"):
+                    TINK.clrDOUT(addr, chan)
+                    resp['state'] = 0
+                elif(cmd == "toggleDOUTbit"):
+                    TINK.toggleDOUT(addr, chan)
+                    resp['state'] = 'UNKNOWN'
+                resp['bit'] = chan
+            elif(cmd == "getDINbit"):
+                chan = args['bit']
+                state = TINK.getDIN(addr, chan)
+                resp['state'] = state
+                resp['bit'] = chan
+            elif(cmd == "getADC"):
+                channel = args['channel']
+                voltage = TINK.getADC(addr, channel)
+                resp['channel'] = channel
+                resp['voltage'] = voltage
+            elif(cmd == "getTEMP"):
+                bit = args['bit']
+                scale = args['scale']
+                temp = TINK.getTEMP(addr, bit, scale)
+                resp['temp'] = temp
+                resp['bit'] = bit
+            elif (cmd == "setOUT"):
+                chan = args['bit']
+                TINK.setMODE(addr, chan, 'dout')
+                resp['state'] = "out"
+            elif (cmd == "setIN"):
+                chan = args['bit']
+                TINK.setMODE(addr, chan, 'din')
+                resp['state'] = "in"
+            elif (cmd == "VERIFY"):
+                if (TINK.getADDR(addr) == addr):
+                    resp['state'] = 1
+                else:
+                    resp['state'] = 0
+            else:
+                sys.stderr.write("unknown or unimplemented tinker cmd: " + cmd)
+            print(json.dumps(resp))
         else:
             sys.stderr.write("unknown plate_type: " + plate_type)
-    except (EOFError, SystemExit):
+    except (EOFError, SystemExit, AssertionError):
         sys.exit(0)
+
