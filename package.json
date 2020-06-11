@@ -1,6 +1,6 @@
 {
   "name": "pi-plates",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "control Pi-Plates from node",
   "main": "plates.js",
   "directories": {
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mharsch/node-pi-plates.git"
+    "url": "git+https://github.com/Harsch-Systems/node-pi-plates.git"
   },
   "keywords": [
     "adc",
@@ -36,7 +36,7 @@
   "author": "Mike Harsch <mike@harschsystems.com>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/mharsch/node-pi-plates/issues"
+    "url": "https://github.com/Harsch-Systems/node-pi-plates/issues"
   },
-  "homepage": "https://github.com/mharsch/node-pi-plates#readme"
+  "homepage": "https://github.com/Harsch-Systems/node-pi-plates#readme"
 }
