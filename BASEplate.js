@@ -5,12 +5,15 @@ const assert = require('assert');
 
 let child = spawn('python3', ['-u', __dirname + '/plate_io.py']);
 
+let child_status = 0;
+
 child.on('error', (err) => {
     console.log('child error: ' + err);
 });
 
 child.on('exit', (code, signal) => {
     console.log(`code: ${code} signal: ${signal}`);
+    child_status = 1;
 });
 
 child.stderr.on('data', (data) => {
@@ -22,13 +25,15 @@ const rl = readline.createInterface({
 });
 
 function do_cmd(task, cb) {
-    const cmd_str = JSON.stringify(task) + '\n';
-    child.stdin.write(cmd_str);
-    assert.equal(rl.listenerCount('line'), 0);
-    rl.once('line', (line) => {
-        const reply = JSON.parse(line);
-        cb(reply);
-    });
+    if (!child_status){
+        const cmd_str = JSON.stringify(task) + '\n';
+        child.stdin.write(cmd_str);
+        assert.equal(rl.listenerCount('line'), 0);
+        rl.once('line', (line) => {
+            const reply = JSON.parse(line);
+            cb(reply);
+        });
+    }
 }
 
 const queue = vasync.queue(do_cmd, 1);
@@ -38,6 +43,28 @@ class BASEplate {
         this.addr = addr;
         this.plate_type = plate_type;
         this.queue = queue;
+        this.plate_status = 3; //0 = no error, 1 = not found, 2 = python error, 3 = unknown
+        this.update_status();
+    }
+    update_status () {
+        if (child_status) {
+            this.plate_status = 2;
+        }else {
+            const verifier = {cmd: "VERIFY", args: {}};
+
+            this.send(verifier, (reply) => {
+                // If the plate was invalid and now works, the piplates library
+                // needs that update as well. So, we activate the piplate:
+
+                if (this.plate_status == 1 && !reply.state) {
+                    const update = {cmd: "ACTIVATE", args: {}};
+
+                    this.send(update, (reply) => {});
+                }
+
+                this.plate_status = reply.state;
+            });
+        }
     }
     send (obj, receive_cb) {
         // send a request to this plate using the form:
@@ -47,7 +74,8 @@ class BASEplate {
         obj['plate_type'] = this.plate_type;
         obj['addr'] = this.addr;
 
-        this.queue.push(obj, receive_cb);
+        if (!child_status)
+            this.queue.push(obj, receive_cb);
     }
     shutdown () {
         child.kill();
