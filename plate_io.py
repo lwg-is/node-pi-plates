@@ -34,13 +34,13 @@ while True:
         if (plate_type == "RELAY"):
             if (cmd == "setLED"):
                 RP.setLED(addr)
-                resp['LED'] = 1
+                resp['state'] = 1
             elif (cmd == "clrLED"):
                 RP.clrLED(addr)
-                resp['LED'] = 0
+                resp['state'] = 0
             elif (cmd == "toggleLED"):
                 RP.toggleLED(addr)
-                resp['LED'] = "UNKNOWN"
+                resp['state'] = "UNKNOWN"
             elif (cmd == "getID"):
                 resp['ID'] = RP.getID(addr)
             elif (cmd == "getHWrev"):
@@ -160,7 +160,7 @@ while True:
                 else:
                     sys.stderr.write("unsupported LED color: " + color)
 
-                resp['color'] = color
+                resp['state'] = color
             elif (cmd == "setLED" and plate_type == "DAQC2"):
                 color = args['color']
 
@@ -169,7 +169,7 @@ while True:
                 else:
                     sys.stderr.write("unsupported LED color: " + color)
 
-                resp['color'] = color
+                resp['state'] = color
             elif (cmd == "VERIFY" and plate_type == "DAQC"):
                 #For some reason the DAQC plate's getADDR method adds 8 to the address.
                 if(DP.getADDR(addr) - 8 == addr):
@@ -205,13 +205,13 @@ while True:
                 resp['value'] = value
             elif (cmd == "setLED"):
                 TP.setLED(addr)
-                resp['LED'] = 1
+                resp['state'] = 1
             elif (cmd == "clrLED"):
                 TP.clrLED(addr)
-                resp['LED'] = 0
+                resp['state'] = 0
             elif (cmd == "toggleLED"):
                 TP.toggleLED(addr)
-                resp['LED'] = TP.getLED(addr)
+                resp['state'] = TP.getLED(addr)
             elif (cmd == "VERIFY"):
                 if(TP.getADDR(addr) == addr):
                     resp['state'] = 0
