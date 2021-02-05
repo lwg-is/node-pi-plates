@@ -9,7 +9,7 @@ try:
     import piplates.THERMOplate as TP
     import piplates.TINKERplate as TINK
 except:
-    sys.exit(1)
+    sys.exit(2)
 
 # All Pi Plate communication must go through this one process to ensure
 # SPI communications don't overlap / interfere and corrupt the device state(s)
@@ -20,9 +20,6 @@ except:
 #   plate_type: <RELAY|DAQC>,
 #   cmd: <command string>, args: {<command-specific args>}
 # }
-
-#TODO: scan for plates at startup so we can handle wrong-address
-#      or plate_type mismatch exceptions
 
 while True:
     try:
@@ -289,5 +286,5 @@ while True:
         else:
             sys.stderr.write("unknown plate_type: " + plate_type)
     except (EOFError, SystemExit, AssertionError):
-        sys.exit(0)
+        sys.exit(3)
 
