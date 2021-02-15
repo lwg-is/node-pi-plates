@@ -13,7 +13,7 @@ child.on('error', (err) => {
 
 child.on('exit', (code, signal) => {
     console.log(`code: ${code} signal: ${signal}`);
-    child_status = 1;
+    child_status = code;
 });
 
 child.stderr.on('data', (data) => {
@@ -43,12 +43,24 @@ class BASEplate {
         this.addr = addr;
         this.plate_type = plate_type;
         this.queue = queue;
-        this.plate_status = 3; //0 = no error, 1 = not found, 2 = python error, 3 = unknown
+
+        /* plate_status stores information about whether or not this plate can currently
+         * be used, or if there is an issue:
+         * 0 = no error
+         * 1 = plate not found
+         * 2 = missing python dependencies
+         * 3 = unknown python error
+         * 4 = unknown state
+         */
+        this.plate_status = 4;
+
         this.update_status();
     }
+
+    // Updates this.plate_status.
     update_status () {
         if (child_status) {
-            this.plate_status = 2;
+            this.plate_status = child_status;
         }else {
             const verifier = {cmd: "VERIFY", args: {}};
 
