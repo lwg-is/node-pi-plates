@@ -1,16 +1,6 @@
 import sys
 import json
 
-try:
-    import piplates.DAQCplate as DP
-    import piplates.DAQC2plate as DP2
-    import piplates.RELAYplate as RP
-    import piplates.MOTORplate as MP
-    import piplates.THERMOplate as TP
-    import piplates.TINKERplate as TINK
-except:
-    sys.exit(2)
-
 # All Pi Plate communication must go through this one process to ensure
 # SPI communications don't overlap / interfere and corrupt the device state(s)
 #
@@ -32,6 +22,7 @@ while True:
         args = msg['args']
         resp = {}
         if (plate_type == "RELAY"):
+            import piplates.RELAYplate as RP
             if (cmd == "setLED"):
                 RP.setLED(addr)
                 resp['state'] = 1
@@ -81,8 +72,10 @@ while True:
         elif (plate_type == "DAQC" or plate_type == "DAQC2"):
             # switch between DAQC and DAQC2 for their common API
             if (plate_type == "DAQC2"):
+                import piplates.DAQC2plate as DP2
                 PP = DP2
             else:
+                import piplates.DAQCplate as DP
                 PP = DP
             if (cmd == "getDINbit"):
                 bit = args['bit']
@@ -195,6 +188,7 @@ while True:
         elif (plate_type == "MOTOR"):
             break
         elif (plate_type == "THERMO"):
+            import piplates.THERMOplate as TP
             if (cmd == "getTEMP"):
                 channel = args['channel']
                 value = TP.getTEMP(addr, channel)
@@ -225,6 +219,7 @@ while True:
                 sys.stderr.write("unknown or unimplemented thermo cmd: " + cmd)
             print(json.dumps(resp))
         elif (plate_type == "TINKER"):
+            import piplates.TINKERplate as TINK
             if("relay" in cmd):
                 relay = args['relay']
                 if(cmd == "relayON"):
