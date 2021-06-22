@@ -263,6 +263,10 @@ while True:
                 chan = args['bit']
                 TINK.setMODE(addr, chan, 'dout')
                 resp['state'] = "out"
+            elif (cmd == "setTEMP"):
+                chan = args['bit']
+                TINK.setMODE(addr, chan, 'temp')
+                resp['state'] = "temp"
             elif (cmd == "setIN"):
                 chan = args['bit']
                 TINK.setMODE(addr, chan, 'din')
