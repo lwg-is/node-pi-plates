@@ -102,6 +102,9 @@ while True:
                 voltage = PP.getADC(addr, channel)
                 resp['channel'] = channel
                 resp['voltage'] = voltage
+            elif (cmd == "getADCall"):
+                voltages = PP.getADCall(addr)
+                resp['voltages'] = voltages
             elif (cmd == "getTEMP" and plate_type == "DAQC"):
                 bit = args['bit']
                 scale = args['scale']
