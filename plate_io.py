@@ -21,8 +21,13 @@ while True:
         cmd = msg['cmd']
         args = msg['args']
         resp = {}
-        if (plate_type == "RELAY"):
-            import piplates.RELAYplate as RP
+        if (plate_type == "RELAY" or plate_type == "RELAY2"):
+            if (plate_type == "RELAY2"):
+                import piplates.RELAYplate2 as RP2
+                RP = RP2
+            else:
+                import piplates.RELAYplate as RP
+                RP = RP
             if (cmd == "setLED"):
                 RP.setLED(addr)
                 resp['state'] = 1
