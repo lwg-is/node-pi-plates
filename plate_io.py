@@ -194,7 +194,24 @@ while True:
                 sys.stderr.write("unknown daqc(2) cmd: " + cmd)
             print(json.dumps(resp))
         elif (plate_type == "MOTOR"):
-            break
+            import piplates.MOTORplate as MOTOR
+            if ("dc" in cmd or "stepper" in cmd):
+                motor = args['motor']
+            if (cmd == "dcCONFIG"):
+                dir = args['dir']
+                speed = args['speed']
+                acceleration = args['acceleration']
+                MOTOR.dcCONFIG(addr, motor, dir, speed, acceleration)
+            elif (cmd == "dcSTART"):
+                MOTOR.dcSTART(addr, motor) 
+            elif (cmd == "dcSPEED"):
+                speed = args['speed']
+                MOTOR.dcSPEED(addr, motor, speed) 
+            elif (cmd == "dcSTOP"):
+                MOTOR.dcSTOP(addr, motor) 
+            else:
+                sys.stderr.write("unknown or unsupported motor cmd: " + cmd)
+            print(json.dumps(resp))
         elif (plate_type == "THERMO"):
             import piplates.THERMOplate as TP
             if (cmd == "getTEMP"):
