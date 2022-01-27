@@ -61,7 +61,7 @@ while True:
                 resp['state'] = this_state
             elif (cmd == "RESET"):
                 RP.RESET(addr)
-                resp['RESET'] = "OK";
+                resp['RESET'] = "OK"
             elif (cmd == "VERIFY"):
                 if(RP.getADDR(addr) == addr):
                     resp['state'] = 0
@@ -165,14 +165,15 @@ while True:
             elif (cmd == "setLED" and plate_type == "DAQC2"):
                 color = args['color']
 
-                if color in ['off','red','green','yellow','blue','magenta','cyan','white']:
+                if color in ['off', 'red', 'green', 'yellow', 'blue',
+                             'magenta', 'cyan', 'white']:
                     DP2.setLED(addr, color)
                 else:
                     sys.stderr.write("unsupported LED color: " + color)
 
                 resp['state'] = color
             elif (cmd == "VERIFY" and plate_type == "DAQC"):
-                #For some reason the DAQC plate's getADDR method adds 8 to the address.
+                # the DAQC plate's getADDR method adds 8 to the address.
                 if(DP.getADDR(addr) - 8 == addr):
                     resp['state'] = 0
                 else:
@@ -203,12 +204,12 @@ while True:
                 acceleration = args['acceleration']
                 MOTOR.dcCONFIG(addr, motor, dir, speed, acceleration)
             elif (cmd == "dcSTART"):
-                MOTOR.dcSTART(addr, motor) 
+                MOTOR.dcSTART(addr, motor)
             elif (cmd == "dcSPEED"):
                 speed = args['speed']
-                MOTOR.dcSPEED(addr, motor, speed) 
+                MOTOR.dcSPEED(addr, motor, speed)
             elif (cmd == "dcSTOP"):
-                MOTOR.dcSTOP(addr, motor) 
+                MOTOR.dcSTOP(addr, motor)
             else:
                 sys.stderr.write("unknown or unsupported motor cmd: " + cmd)
             print(json.dumps(resp))
@@ -321,4 +322,3 @@ while True:
             sys.stderr.write("unknown plate_type: " + plate_type)
     except (EOFError, SystemExit, AssertionError):
         sys.exit(3)
-
