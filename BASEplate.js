@@ -25,7 +25,7 @@ const rl = readline.createInterface({
 });
 
 function do_cmd(task, cb) {
-    if (!child_status){
+    if (!child_status) {
         const cmd_str = JSON.stringify(task) + '\n';
         child.stdin.write(cmd_str);
         assert.equal(rl.listenerCount('line'), 0);
@@ -86,8 +86,9 @@ class BASEplate {
         obj['plate_type'] = this.plate_type;
         obj['addr'] = this.addr;
 
-        if (!child_status)
+        if (!child_status) {
             this.queue.push(obj, receive_cb);
+        }
     }
     shutdown () {
         child.kill();
