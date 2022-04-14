@@ -63,7 +63,7 @@ while True:
                 RP.RESET(addr)
                 resp['RESET'] = "OK"
             elif (cmd == "VERIFY"):
-                if(RP.getADDR(addr) == addr):
+                if (RP.getADDR(addr) == addr):
                     resp['state'] = 0
                 else:
                     resp['state'] = 1
@@ -210,6 +210,11 @@ while True:
                 MOTOR.dcSPEED(addr, motor, speed)
             elif (cmd == "dcSTOP"):
                 MOTOR.dcSTOP(addr, motor)
+            elif (cmd == "VERIFY"):
+                if (MOTOR.getADDR(addr) == addr):
+                    resp['state'] = 0
+                else:
+                    resp['state'] = 1
             else:
                 sys.stderr.write("unknown or unsupported motor cmd: " + cmd)
             print(json.dumps(resp))
@@ -318,6 +323,76 @@ while True:
             else:
                 sys.stderr.write("unknown or unimplemented tinker cmd: " + cmd)
             print(json.dumps(resp))
+        elif (plate_type == "ADC"):
+            import piplates.ADCplate as ADC
+            if (cmd == "getDINbit"):
+                bit = args['bit']
+                state = ADC.getDINbit(addr, bit)
+                resp['bit'] = bit
+                resp['state'] = state
+            elif (cmd == "getDINall"):
+                bits = ADC.getDINall(addr) 
+                bit_list = []
+                for i in range(4):
+                    if bits & 1 << i != 0:
+                        bit_list.insert(i, 1)
+                    else:
+                        bit_list.insert(i, 0)
+                resp['bits'] = bits
+                resp['states'] = bit_list
+            elif (cmd == "setLED"):
+                ADC.setLED(addr)
+                resp['state'] = 1
+            elif (cmd == "clrLED"):
+                ADC.clrLED(addr)
+                resp['state'] = 0
+            elif (cmd == "toggleLED"):
+                ADC.toggleLED(addr)
+                resp['state'] = "UNKNOWN"
+            elif (cmd == "VERIFY"):
+                if (ADC.getADDR(addr) == addr):
+                    resp['state'] = 0
+                else:
+                    resp['state'] = 1
+            else:
+                sys.stderr.write("unknown or unimplemented adc cmd: " + cmd)
+            print(json.dumps(resp))
+        elif (plate_type == "DIGI"):
+            import piplates.DIGIplate as DIGI
+            if (cmd == "getDINbit"):
+                bit = args['bit']
+                state = DIGI.getDINbit(addr, bit)
+                resp['bit'] = bit
+                resp['state'] = state
+            elif (cmd == "getDINall"):
+                bits = DIGI.getDINall(addr) 
+                bit_list = []
+                for i in range(7):
+                    if bits & 1 << i != 0:
+                        bit_list.insert(i, 1)
+                    else:
+                        bit_list.insert(i, 0)
+                resp['bits'] = bits
+                resp['states'] = bit_list
+            elif (cmd == "setLED"):
+                DIGI.setLED(addr)
+                resp['state'] = 1
+            elif (cmd == "clrLED"):
+                DIGI.clrLED(addr)
+                resp['state'] = 0
+            elif (cmd == "toggleLED"):
+                DIGI.toggleLED(addr)
+                resp['state'] = "UNKNOWN"
+            elif (cmd == "VERIFY"):
+                if (DIGI.getADDR(addr) == addr):
+                    resp['state'] = 0
+                else:
+                    resp['state'] = 1
+            else:
+                sys.stderr.write("unknown or unimplemented digi cmd: " + cmd)
+            print(json.dumps(resp))
+        elif (plate_type == "CURRENT"):
+            import piplates.CURRENTplate as CURRENT
         else:
             sys.stderr.write("unknown plate_type: " + plate_type)
     except (EOFError, SystemExit, AssertionError):

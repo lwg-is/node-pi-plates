@@ -61,7 +61,7 @@ class BASEplate {
     update_status () {
         if (child_status) {
             this.plate_status = child_status;
-        }else {
+        } else {
             const verifier = {cmd: "VERIFY", args: {}};
 
             this.send(verifier, (reply) => {
