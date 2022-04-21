@@ -11,6 +11,138 @@ import json
 #   cmd: <command string>, args: {<command-specific args>}
 # }
 
+# The following plates share the functions setLED, clrLED, toggleLED,
+# getID, getFWrev, getHWrev, getVersion, getADDR, RESET
+common_plates = ["ADC", "CURRENT", "DAQC", "DAQC2", "DIGI", "MOTOR", "RELAY",
+                 "RELAY2", "THERMO"]
+
+# The following functions are (mostly) shared by common_plates,
+# though some vary in args and output type
+common_funcs = ["setLED", "clrLED", "toggleLED", "getLED", "getID", "getFWrev",
+                "getHWrev", "getVersion", "getADDR", "RESET"]
+
+
+def common_handler(PP, plate_type, addr, cmd, args):
+    result = {}
+    if (cmd == "getID"):
+        result['ID'] = PP.getID(addr)
+    elif (cmd == "getFWrev"):
+        result['FWrev'] = PP.getFWrev(addr)
+    elif (cmd == "getHWrev"):
+        result['HWrev'] = PP.getHWrev(addr)
+    elif (cmd == "getVersion"):
+        result['Version'] = PP.getVersion()
+    elif (cmd == "getADDR"):
+        result['ADDR'] = PP.getADDR(addr)
+    elif (cmd == "RESET"):
+        if (plate_type == "DAQC"):
+            result['RESET'] = "RESET() UNAVAILABLE"
+        else:
+            PP.RESET(addr)
+            result['RESET'] = "OK"
+    elif (cmd == "setLED"):
+        if (plate_type == "DAQC"):
+            if ('color' in args):
+                color = args['color']
+                if (color == 'red'):
+                    PP.setLED(addr, 0)
+                    PP.clrLED(addr, 1)
+                elif (color == 'green'):
+                    PP.clrLED(addr, 0)
+                    PP.setLED(addr, 1)
+                elif (color == 'yellow'):
+                    PP.setLED(addr, 0)
+                    PP.setLED(addr, 1)
+                elif (color == 'off'):
+                    PP.clrLED(addr, 0)
+                    PP.clrLED(addr, 1)
+            else:
+                # default to yellow (both LEDs)
+                color = 'yellow'
+                PP.setLED(addr, 0)
+                PP.setLED(addr, 1)
+
+            result['state'] = color
+        elif (plate_type == "DAQC2"):
+            if ('color' in args):
+                color = args['color']
+
+                if color in ['off', 'red', 'green', 'yellow', 'blue',
+                             'magenta', 'cyan', 'white']:
+                    PP.setLED(addr, color)
+                    result['state'] = color
+                else:
+                    sys.stderr.write("unsupported LED color: " + color)
+            else:
+                PP.setLED(addr, 'white')
+                result['state'] = 1
+        else:
+            PP.setLED(addr)
+            result['state'] = 1
+    elif (cmd == "clrLED"):
+        if (plate_type == "DAQC"):
+            if ('color' in args):
+                color = args['color']
+                if (color == 'red'):
+                    PP.clrLED(addr, 0)
+                elif (color == 'green'):
+                    PP.clrLED(addr, 1)
+                else:
+                    sys.stderr.write("unsupported LED color: " + color)
+            else:
+                PP.clrLED(addr, 0)
+                PP.clrLED(addr, 0)
+                result['state'] = 0
+
+        elif (plate_type == "DAQC2"):
+            PP.setLED(addr, 'off')
+            result['state'] = 0
+        else:
+            PP.clrLED(addr)
+            result['state'] = 0
+    elif (cmd == "toggleLED"):
+        if (plate_type == "DAQC"):
+            if ('color' in args):
+                color = args['color']
+                if (color == 'red'):
+                    PP.toggleLED(addr, 0)
+                    result['state'] = PP.getLED(addr, 0)
+                elif (color == 'green'):
+                    PP.toggleLED(addr, 1)
+                    result['state'] = PP.getLED(addr, 1)
+                else:
+                    sys.stderr.write("LED color should be 'red' or 'green'")
+            else:
+                PP.toggleLED(addr, 0)
+                PP.toggleLED(addr, 1)
+        else:
+            PP.toggleLED(addr)
+
+        result['state'] = "UNKNOWN"
+
+    elif (cmd == "getLED"):
+        if plate_type in ['ADC', 'DAQC', 'DAQC2', 'THERMO']:
+            if (plate_type == 'DAQC'):
+                if ('color' in args):
+                    color = args['color']
+                    if (color == 'red'):
+                        result['state'] = PP.getLED(addr, 0)
+                    elif (color == 'green'):
+                        result['state'] = PP.getLED(addr, 1)
+                    else:
+                        sys.stderr.write("LED color should be red or green")
+                else:
+                    sys.stderr.write("must specify 'color' for bi-color LED")
+                    result['state'] = "UNKNOWN"
+            else:
+                result['state'] = PP.getLED(addr)
+        else:
+            sys.stderr.write("getLED() unsupported for plate: " + plate_type)
+            result['state'] = "UNKNOWN"
+#    else:
+    return result
+
+
 while True:
     try:
         line = sys.stdin.readline()
@@ -28,25 +160,8 @@ while True:
             else:
                 import piplates.RELAYplate as RP
                 RP = RP
-            if (cmd == "setLED"):
-                RP.setLED(addr)
-                resp['state'] = 1
-            elif (cmd == "clrLED"):
-                RP.clrLED(addr)
-                resp['state'] = 0
-            elif (cmd == "toggleLED"):
-                RP.toggleLED(addr)
-                resp['state'] = "UNKNOWN"
-            elif (cmd == "getID"):
-                resp['ID'] = RP.getID(addr)
-            elif (cmd == "getHWrev"):
-                resp['HWrev'] = RP.getHWrev(addr)
-            elif (cmd == "getFWrev"):
-                resp['FWrev'] = RP.getFWrev(addr)
-            elif (cmd == "getPMrev"):
-                resp['PMrev'] = RP.getPMrev()
-            elif (cmd == "getADDR"):
-                resp['ADDR'] = RP.getADDR(addr)
+            if (cmd in common_funcs):
+                resp = common_handler(RP, plate_type, addr, cmd, args)
             elif ("relay" in cmd):
                 relay = args['relay']
                 if (cmd == "relayON"):
@@ -59,9 +174,6 @@ while True:
                 this_state = (state >> (relay - 1)) & 1
                 resp['relay'] = relay
                 resp['state'] = this_state
-            elif (cmd == "RESET"):
-                RP.RESET(addr)
-                resp['RESET'] = "OK"
             elif (cmd == "VERIFY"):
                 if (RP.getADDR(addr) == addr):
                     resp['state'] = 0
@@ -82,7 +194,9 @@ while True:
             else:
                 import piplates.DAQCplate as DP
                 PP = DP
-            if (cmd == "getDINbit"):
+            if (cmd in common_funcs):
+                resp = common_handler(PP, plate_type, addr, cmd, args)
+            elif (cmd == "getDINbit"):
                 bit = args['bit']
                 state = PP.getDINbit(addr, bit)
                 resp['bit'] = bit
@@ -143,35 +257,6 @@ while True:
             elif (cmd == "getFREQ" and plate_type == "DAQC2"):
                 value = DP2.getFREQ(addr)
                 resp['value'] = value
-            elif (cmd == "setLED" and plate_type == "DAQC"):
-                color = args['color']
-
-                if color == 'off':
-                    DP.clrLED(addr, 0)
-                    DP.clrLED(addr, 1)
-                elif color == 'red':
-                    DP.setLED(addr, 0)
-                    DP.clrLED(addr, 1)
-                elif color == 'green':
-                    DP.clrLED(addr, 0)
-                    DP.setLED(addr, 1)
-                elif color == 'yellow':
-                    DP.setLED(addr, 0)
-                    DP.setLED(addr, 1)
-                else:
-                    sys.stderr.write("unsupported LED color: " + color)
-
-                resp['state'] = color
-            elif (cmd == "setLED" and plate_type == "DAQC2"):
-                color = args['color']
-
-                if color in ['off', 'red', 'green', 'yellow', 'blue',
-                             'magenta', 'cyan', 'white']:
-                    DP2.setLED(addr, color)
-                else:
-                    sys.stderr.write("unsupported LED color: " + color)
-
-                resp['state'] = color
             elif (cmd == "VERIFY" and plate_type == "DAQC"):
                 # the DAQC plate's getADDR method adds 8 to the address.
                 if(DP.getADDR(addr) - 8 == addr):
@@ -196,6 +281,8 @@ while True:
             print(json.dumps(resp))
         elif (plate_type == "MOTOR"):
             import piplates.MOTORplate as MOTOR
+            if (cmd in common_funcs):
+                resp = common_handler(MOTOR, plate_type, addr, cmd, args)
             if ("dc" in cmd or "stepper" in cmd):
                 motor = args['motor']
             if (cmd == "dcCONFIG"):
@@ -220,6 +307,8 @@ while True:
             print(json.dumps(resp))
         elif (plate_type == "THERMO"):
             import piplates.THERMOplate as TP
+            if (cmd in common_funcs):
+                resp = common_handler(TP, plate_type, addr, cmd, args)
             if (cmd == "getTEMP"):
                 channel = args['channel']
                 value = TP.getTEMP(addr, channel)
@@ -228,15 +317,6 @@ while True:
             elif (cmd == "getCOLD"):
                 value = TP.getCOLD(addr)
                 resp['value'] = value
-            elif (cmd == "setLED"):
-                TP.setLED(addr)
-                resp['state'] = 1
-            elif (cmd == "clrLED"):
-                TP.clrLED(addr)
-                resp['state'] = 0
-            elif (cmd == "toggleLED"):
-                TP.toggleLED(addr)
-                resp['state'] = TP.getLED(addr)
             elif (cmd == "VERIFY"):
                 if(TP.getADDR(addr) == addr):
                     resp['state'] = 0
@@ -325,13 +405,15 @@ while True:
             print(json.dumps(resp))
         elif (plate_type == "ADC"):
             import piplates.ADCplate as ADC
-            if (cmd == "getDINbit"):
+            if (cmd in common_funcs):
+                resp = common_handler(ADC, plate_type, addr, cmd, args)
+            elif (cmd == "getDINbit"):
                 bit = args['bit']
                 state = ADC.getDINbit(addr, bit)
                 resp['bit'] = bit
                 resp['state'] = state
             elif (cmd == "getDINall"):
-                bits = ADC.getDINall(addr) 
+                bits = ADC.getDINall(addr)
                 bit_list = []
                 for i in range(4):
                     if bits & 1 << i != 0:
@@ -340,15 +422,14 @@ while True:
                         bit_list.insert(i, 0)
                 resp['bits'] = bits
                 resp['states'] = bit_list
-            elif (cmd == "setLED"):
-                ADC.setLED(addr)
-                resp['state'] = 1
-            elif (cmd == "clrLED"):
-                ADC.clrLED(addr)
-                resp['state'] = 0
-            elif (cmd == "toggleLED"):
-                ADC.toggleLED(addr)
-                resp['state'] = "UNKNOWN"
+            elif (cmd == "getADC"):
+                channel = args['channel']
+                reading = ADC.getADC(addr, channel)
+                resp['channel'] = channel
+                resp['voltage'] = voltage
+            elif (cmd == "getADCall"):
+                voltages = ADC.getADCall(addr)
+                resp['voltages'] = voltages
             elif (cmd == "VERIFY"):
                 if (ADC.getADDR(addr) == addr):
                     resp['state'] = 0
@@ -359,13 +440,15 @@ while True:
             print(json.dumps(resp))
         elif (plate_type == "DIGI"):
             import piplates.DIGIplate as DIGI
-            if (cmd == "getDINbit"):
+            if (cmd in common_funcs):
+                resp = common_handler(DIGI, plate_type, addr, cmd, args)
+            elif (cmd == "getDINbit"):
                 bit = args['bit']
                 state = DIGI.getDINbit(addr, bit)
                 resp['bit'] = bit
                 resp['state'] = state
             elif (cmd == "getDINall"):
-                bits = DIGI.getDINall(addr) 
+                bits = DIGI.getDINall(addr)
                 bit_list = []
                 for i in range(7):
                     if bits & 1 << i != 0:
@@ -374,15 +457,6 @@ while True:
                         bit_list.insert(i, 0)
                 resp['bits'] = bits
                 resp['states'] = bit_list
-            elif (cmd == "setLED"):
-                DIGI.setLED(addr)
-                resp['state'] = 1
-            elif (cmd == "clrLED"):
-                DIGI.clrLED(addr)
-                resp['state'] = 0
-            elif (cmd == "toggleLED"):
-                DIGI.toggleLED(addr)
-                resp['state'] = "UNKNOWN"
             elif (cmd == "VERIFY"):
                 if (DIGI.getADDR(addr) == addr):
                     resp['state'] = 0
@@ -393,6 +467,23 @@ while True:
             print(json.dumps(resp))
         elif (plate_type == "CURRENT"):
             import piplates.CURRENTplate as CURRENT
+            if (cmd in common_funcs):
+                resp = common_handler(CURRENT, plate_type, addr, cmd, args)
+            elif (cmd == "getI"):
+                channel = args['channel']
+                mA = CURRENT.getI(addr, channel)
+                resp['milliamps'] = mA
+            elif (cmd == "getIall"):
+                readings = CURRENT.getIall(addr)
+                resp['currents'] = readings
+            elif (cmd == "VERIFY"):
+                if (CURRENT.getADDR(addr) == addr):
+                    resp['state'] = 0
+                else:
+                    resp['state'] = 1
+            else:
+                sys.stderr.write("unknown current cmd: " + cmd)
+            print(json.dumps(resp))
         else:
             sys.stderr.write("unknown plate_type: " + plate_type)
     except (EOFError, SystemExit, AssertionError):
