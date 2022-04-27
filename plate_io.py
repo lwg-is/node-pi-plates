@@ -11,15 +11,10 @@ import json
 #   cmd: <command string>, args: {<command-specific args>}
 # }
 
-# The following plates share the functions setLED, clrLED, toggleLED,
-# getID, getFWrev, getHWrev, getVersion, getADDR, RESET
-common_plates = ["ADC", "CURRENT", "DAQC", "DAQC2", "DIGI", "MOTOR", "RELAY",
-                 "RELAY2", "THERMO"]
-
-# The following functions are (mostly) shared by common_plates,
-# though some vary in args and output type
-common_funcs = ["setLED", "clrLED", "toggleLED", "getLED", "getID", "getFWrev",
-                "getHWrev", "getVersion", "getADDR", "RESET"]
+# The following functions are (mostly) shared by all plate types,
+# though some vary in args and output type (see differences inline)
+common_funcs = ['setLED', 'clrLED', 'toggleLED', 'getLED', 'getID', 'getFWrev',
+                'getHWrev', 'getVersion', 'getADDR', 'RESET', 'VERIFY']
 
 
 def common_handler(PP, plate_type, addr, cmd, args):
@@ -34,9 +29,18 @@ def common_handler(PP, plate_type, addr, cmd, args):
         result['Version'] = PP.getVersion()
     elif (cmd == "getADDR"):
         result['ADDR'] = PP.getADDR(addr)
+    elif (cmd == "VERIFY"):
+        poll = PP.getADDR(addr)
+        # the DAQC plate's getADDR method adds 8 to the address.
+        if (plate_type == "DAQC"):
+            poll = poll - 8
+        if (poll == addr):
+            result['state'] = 0
+        else:
+            result['state'] = 1
     elif (cmd == "RESET"):
         if (plate_type == "DAQC"):
-            result['RESET'] = "RESET() UNAVAILABLE"
+            result['RESET'] = "RESET() Unavailable on DAQC"
         else:
             PP.RESET(addr)
             result['RESET'] = "OK"
@@ -46,9 +50,7 @@ def common_handler(PP, plate_type, addr, cmd, args):
                 color = args['color']
                 if (color == 'red'):
                     PP.setLED(addr, 0)
-                    PP.clrLED(addr, 1)
                 elif (color == 'green'):
-                    PP.clrLED(addr, 0)
                     PP.setLED(addr, 1)
                 elif (color == 'yellow'):
                     PP.setLED(addr, 0)
@@ -56,13 +58,13 @@ def common_handler(PP, plate_type, addr, cmd, args):
                 elif (color == 'off'):
                     PP.clrLED(addr, 0)
                     PP.clrLED(addr, 1)
-            else:
-                # default to yellow (both LEDs)
-                color = 'yellow'
-                PP.setLED(addr, 0)
-                PP.setLED(addr, 1)
 
-            result['state'] = color
+                result['state'] = color
+            else:
+                # default to green (LED 1)
+                PP.setLED(addr, 1)
+                result['state'] = 1
+
         elif (plate_type == "DAQC2"):
             if ('color' in args):
                 color = args['color']
@@ -76,6 +78,9 @@ def common_handler(PP, plate_type, addr, cmd, args):
             else:
                 PP.setLED(addr, 'white')
                 result['state'] = 1
+        elif (plate_type == "TINKER"):
+            PP.setLED(addr, 0)
+            result['state'] = 1
         else:
             PP.setLED(addr)
             result['state'] = 1
@@ -91,11 +96,14 @@ def common_handler(PP, plate_type, addr, cmd, args):
                     sys.stderr.write("unsupported LED color: " + color)
             else:
                 PP.clrLED(addr, 0)
-                PP.clrLED(addr, 0)
+                PP.clrLED(addr, 1)
                 result['state'] = 0
 
         elif (plate_type == "DAQC2"):
             PP.setLED(addr, 'off')
+            result['state'] = 0
+        elif (plate_type == "TINKER"):
+            PP.clrLED(addr, 0)
             result['state'] = 0
         else:
             PP.clrLED(addr)
@@ -113,15 +121,25 @@ def common_handler(PP, plate_type, addr, cmd, args):
                 else:
                     sys.stderr.write("LED color should be 'red' or 'green'")
             else:
-                PP.toggleLED(addr, 0)
+                # default to the green LED (1)
                 PP.toggleLED(addr, 1)
+                result['state'] = PP.getLED(addr, 1)
+        elif (plate_type == "DAQC2"):
+            # No DAQC2plate.toggleLED() but we can fake it
+            cur_color = PP.getLED(addr)
+            if (cur_color == "off"):
+                PP.setLED(addr, "white")
+            else:
+                PP.setLED(addr, "off")
+        elif (plate_type == "TINKER"):
+            PP.toggleLED(addr, 0)
+            result['state'] = "UNKNOWN"
         else:
             PP.toggleLED(addr)
-
-        result['state'] = "UNKNOWN"
+            result['state'] = "UNKNOWN"
 
     elif (cmd == "getLED"):
-        if plate_type in ['ADC', 'DAQC', 'DAQC2', 'THERMO']:
+        if plate_type in ['ADC', 'DAQC', 'DAQC2', 'THERMO', 'TINKER']:
             if (plate_type == 'DAQC'):
                 if ('color' in args):
                     color = args['color']
@@ -132,14 +150,14 @@ def common_handler(PP, plate_type, addr, cmd, args):
                     else:
                         sys.stderr.write("LED color should be red or green")
                 else:
-                    sys.stderr.write("must specify 'color' for bi-color LED")
-                    result['state'] = "UNKNOWN"
+                    # default to green LED (1)
+                    result['state'] = PP.getLED(addr, 1)
             else:
                 result['state'] = PP.getLED(addr)
         else:
             sys.stderr.write("getLED() unsupported for plate: " + plate_type)
             result['state'] = "UNKNOWN"
-#    else:
+
     return result
 
 
@@ -174,11 +192,6 @@ while True:
                 this_state = (state >> (relay - 1)) & 1
                 resp['relay'] = relay
                 resp['state'] = this_state
-            elif (cmd == "VERIFY"):
-                if (RP.getADDR(addr) == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
             elif (cmd == "ACTIVATE"):
                 RP.relaysPresent[addr] = 1
                 resp['state'] = 1
@@ -257,17 +270,6 @@ while True:
             elif (cmd == "getFREQ" and plate_type == "DAQC2"):
                 value = DP2.getFREQ(addr)
                 resp['value'] = value
-            elif (cmd == "VERIFY" and plate_type == "DAQC"):
-                # the DAQC plate's getADDR method adds 8 to the address.
-                if(DP.getADDR(addr) - 8 == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
-            elif (cmd == "VERIFY" and plate_type == "DAQC2"):
-                if(DP2.getADDR(addr) == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
             elif (cmd == "ACTIVATE" and plate_type == "DAQC"):
                 PP.daqcsPresent[addr] = 1
                 PP.Vcc[addr] = PP.getADC(addr, 8)
@@ -297,11 +299,6 @@ while True:
                 MOTOR.dcSPEED(addr, motor, speed)
             elif (cmd == "dcSTOP"):
                 MOTOR.dcSTOP(addr, motor)
-            elif (cmd == "VERIFY"):
-                if (MOTOR.getADDR(addr) == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
             else:
                 sys.stderr.write("unknown or unsupported motor cmd: " + cmd)
             print(json.dumps(resp))
@@ -309,7 +306,7 @@ while True:
             import piplates.THERMOplate as TP
             if (cmd in common_funcs):
                 resp = common_handler(TP, plate_type, addr, cmd, args)
-            if (cmd == "getTEMP"):
+            elif (cmd == "getTEMP"):
                 channel = args['channel']
                 value = TP.getTEMP(addr, channel)
                 resp['channel'] = channel
@@ -317,11 +314,6 @@ while True:
             elif (cmd == "getCOLD"):
                 value = TP.getCOLD(addr)
                 resp['value'] = value
-            elif (cmd == "VERIFY"):
-                if(TP.getADDR(addr) == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
             elif (cmd == "ACTIVATE"):
                 TP.THERMOsPresent[addr] = 1
                 TP.getCalVals(addr)
@@ -331,7 +323,9 @@ while True:
             print(json.dumps(resp))
         elif (plate_type == "TINKER"):
             import piplates.TINKERplate as TINK
-            if("relay" in cmd):
+            if (cmd in common_funcs):
+                resp = common_handler(TINK, plate_type, addr, cmd, args)
+            elif("relay" in cmd):
                 relay = args['relay']
                 if(cmd == "relayON"):
                     TINK.relayON(addr, relay)
@@ -392,11 +386,6 @@ while True:
                 chan = args['bit']
                 TINK.setMODE(addr, chan, 'din')
                 resp['state'] = "in"
-            elif (cmd == "VERIFY"):
-                if (TINK.getADDR(addr) == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
             elif (cmd == "ACTIVATE"):
                 TINK.platesPresent[addr] = 1
                 resp['state'] = 1
@@ -430,11 +419,6 @@ while True:
             elif (cmd == "getADCall"):
                 voltages = ADC.getADCall(addr)
                 resp['voltages'] = voltages
-            elif (cmd == "VERIFY"):
-                if (ADC.getADDR(addr) == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
             else:
                 sys.stderr.write("unknown or unimplemented adc cmd: " + cmd)
             print(json.dumps(resp))
@@ -457,11 +441,6 @@ while True:
                         bit_list.insert(i, 0)
                 resp['bits'] = bits
                 resp['states'] = bit_list
-            elif (cmd == "VERIFY"):
-                if (DIGI.getADDR(addr) == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
             else:
                 sys.stderr.write("unknown or unimplemented digi cmd: " + cmd)
             print(json.dumps(resp))
@@ -476,11 +455,6 @@ while True:
             elif (cmd == "getIall"):
                 readings = CURRENT.getIall(addr)
                 resp['currents'] = readings
-            elif (cmd == "VERIFY"):
-                if (CURRENT.getADDR(addr) == addr):
-                    resp['state'] = 0
-                else:
-                    resp['state'] = 1
             else:
                 sys.stderr.write("unknown current cmd: " + cmd)
             print(json.dumps(resp))
