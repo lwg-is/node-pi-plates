@@ -133,7 +133,7 @@ def common_handler(PP, plate_type, addr, cmd, args):
                 PP.setLED(addr, "off")
         elif (plate_type == "TINKER"):
             PP.toggleLED(addr, 0)
-            result['state'] = "UNKNOWN"
+            result['state'] = PP.getLED(addr, 0)
         else:
             PP.toggleLED(addr)
             result['state'] = "UNKNOWN"
@@ -152,6 +152,9 @@ def common_handler(PP, plate_type, addr, cmd, args):
                 else:
                     # default to green LED (1)
                     result['state'] = PP.getLED(addr, 1)
+            if (plate_type == 'TINKER'):
+                    # default to onboard LED (0)
+                    result['state'] = PP.getLED(addr, 0)
             else:
                 result['state'] = PP.getLED(addr)
         else:
