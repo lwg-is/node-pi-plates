@@ -1,0 +1,10 @@
+DIGI 5
+getID():  Pi-Plate DIGIplate
+getFWrev():  1.0
+getHWrev():  1.0
+getVersion():  1.0
+getADDR():  5
+setLED(): 
+clrLED(): 
+toggleLED(): 
+RESET() ...

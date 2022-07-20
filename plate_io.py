@@ -417,18 +417,11 @@ while True:
             elif (cmd == "getADC"):
                 channel = args['channel']
                 reading = ADC.getADC(addr, channel)
-                resp['channel'] = channel
-                resp['voltage'] = voltage
-            elif (cmd == "getADCall"):
-                voltages = ADC.getADCall(addr)
-                resp['voltages'] = voltages
-            elif (cmd == "getI"):
-                channel = args['channel']
-                mA = ADC.getI(addr, channel)
-                resp['milliamps'] = mA
-            elif (cmd == "getIall"):
-                readings = ADC.getIall(addr)
-                resp['currents'] = readings
+                sys.stderr.write("got back reading: " + str(reading))
+                if channel.startswith('I'):
+                    resp['milliamps'] = reading
+                else:
+                    resp['voltage'] = reading
             else:
                 sys.stderr.write("unknown or unimplemented adc cmd: " + cmd)
             print(json.dumps(resp))

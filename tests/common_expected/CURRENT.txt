@@ -1,0 +1,10 @@
+CURRENT 6
+getID():  Pi-Plate CURRENTplate
+getFWrev():  1.0
+getHWrev():  1.0
+getVersion():  1.0
+getADDR():  6
+setLED(): 
+clrLED(): 
+toggleLED(): 
+RESET() ...

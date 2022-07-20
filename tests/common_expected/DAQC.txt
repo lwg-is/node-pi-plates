@@ -1,0 +1,14 @@
+DAQC 1
+getID():  Pi-Plate DAQC
+getFWrev():  1.2
+getHWrev():  1.0
+getVersion():  1.5
+getADDR():  9
+setLED(): red
+setLED(): green
+clrLED(): red
+clrLED(): green
+toggleLED(): red
+toggleLED(): green
+getLED() bi-color 'red':  1
+getLED() bi-color 'green':  1

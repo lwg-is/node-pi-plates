@@ -1,0 +1,11 @@
+THERMO 3
+getID():  Pi-Plate THERMOplate
+getFWrev():  1.1
+getHWrev():  2.0
+getVersion():  1.3
+getADDR():  3
+setLED():
+clrLED():
+toggleLED():
+getLED():  1
+RESET() ...

@@ -1,0 +1,10 @@
+RELAY 4
+getID():  Pi-Plate RELAY
+getFWrev():  1.0
+getHWrev():  1.0
+getVersion():  1.2
+getADDR():  4
+setLED():
+clrLED():
+toggleLED():
+RESET() ...

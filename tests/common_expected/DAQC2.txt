@@ -1,0 +1,17 @@
+DAQC2 2
+getID():  Pi-Plate DAQC2plate
+getFWrev():  1.0
+getHWrev():  1.0
+getVersion():  1.1
+getADDR():  2
+setLED():  off
+setLED():  red
+setLED():  green
+setLED():  yellow
+setLED():  blue
+setLED():  magenta
+setLED():  cyan
+setLED():  white
+no DAQC2 clrLED(), substituting setLED(off)
+getLED():  off
+RESET() ...

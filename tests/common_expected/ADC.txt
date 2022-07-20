@@ -1,0 +1,11 @@
+ADC 7
+getID():  Pi-Plate ADCplate
+getFWrev():  0.8
+getHWrev():  1.0
+getVersion():  1.0
+getADDR():  7
+setLED(): 
+clrLED(): 
+toggleLED(): 
+getLED():  1
+RESET() ...
