@@ -1,6 +1,6 @@
 const CURRENTplate = require('../CURRENTplate');
 
-CUR1 = new CURRENTplate(1);
+CUR1 = new CURRENTplate(6);
 
 CUR1.send({cmd: "setLED", args: {}}, (reply) => {
     console.log('setLED: ' + reply.state);
