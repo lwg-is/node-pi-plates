@@ -341,7 +341,7 @@ while True:
                 resp['state'] = state
             elif("DOUT" in cmd):
                 chan = args['bit']
-                if(cmd == "setDOUTbit"):
+                if(cmd == "setDOUTbit" or cmd == "setDOUT"):
                     TINK.setDOUT(addr, chan)
                     resp['state'] = 1
                 elif(cmd == "clrDOUTbit"):
@@ -351,7 +351,7 @@ while True:
                     TINK.toggleDOUT(addr, chan)
                     resp['state'] = 'UNKNOWN'
                 resp['bit'] = chan
-            elif(cmd == "getDINbit"):
+            elif(cmd == "getDINbit" or cmd == "getDIN"):
                 chan = args['bit']
                 state = TINK.getDIN(addr, chan)
                 resp['state'] = state
