@@ -424,6 +424,10 @@ while True:
             elif (cmd == "getADCall"):
                 voltages = ADC.getADCall(addr)
                 resp['voltages'] = voltages
+            elif (cmd == "setMODE"):
+                mode = args['mode']
+                ADC.setMODE(addr, mode)
+                resp['mode'] = mode
             else:
                 sys.stderr.write("unknown or unimplemented adc cmd: " + cmd)
             print(json.dumps(resp))
