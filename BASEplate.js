@@ -30,8 +30,12 @@ function do_cmd(task, cb) {
         child.stdin.write(cmd_str);
         assert.equal(rl.listenerCount('line'), 0);
         rl.once('line', (line) => {
-            const reply = JSON.parse(line);
-            cb(reply);
+            try {
+                const reply = JSON.parse(line);
+                cb(reply);
+            } catch (e) {
+                console.log('invalid json received from python co-process: ' + line);
+            }
         });
     }
 }
