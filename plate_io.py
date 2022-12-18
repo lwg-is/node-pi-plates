@@ -286,8 +286,6 @@ while True:
             print(json.dumps(resp))
         elif (plate_type == "MOTOR"):
             import piplates.MOTORplate as MOTOR
-            if (cmd in common_funcs):
-                resp = common_handler(MOTOR, plate_type, addr, cmd, args)
             if ("dc" in cmd or "stepper" in cmd):
                 motor = args['motor']
             if (cmd == "dcCONFIG"):
@@ -302,6 +300,8 @@ while True:
                 MOTOR.dcSPEED(addr, motor, speed)
             elif (cmd == "dcSTOP"):
                 MOTOR.dcSTOP(addr, motor)
+            elif (cmd in common_funcs):
+                resp = common_handler(MOTOR, plate_type, addr, cmd, args)
             else:
                 sys.stderr.write("unknown or unsupported motor cmd: " + cmd)
             print(json.dumps(resp))
