@@ -48,23 +48,24 @@ def common_handler(PP, plate_type, addr, cmd, args):
         if (plate_type == "DAQC"):
             if ('color' in args):
                 color = args['color']
-                if (color == 'red'):
-                    PP.setLED(addr, 0)
-                elif (color == 'green'):
-                    PP.setLED(addr, 1)
-                elif (color == 'yellow'):
-                    PP.setLED(addr, 0)
-                    PP.setLED(addr, 1)
-                elif (color == 'off'):
-                    PP.clrLED(addr, 0)
-                    PP.clrLED(addr, 1)
-
-                result['state'] = color
+                if color in ['red', 'green', 'yellow', 'off']:
+                    if (color == 'red'):
+                        PP.setLED(addr, 0)
+                    elif (color == 'green'):
+                        PP.setLED(addr, 1)
+                    elif (color == 'yellow'):
+                        PP.setLED(addr, 0)
+                        PP.setLED(addr, 1)
+                    elif (color == 'off'):
+                        PP.clrLED(addr, 0)
+                        PP.clrLED(addr, 1)
+                    result['state'] = color
+                else:
+                    sys.stderr.write("unsupported DAQCplate LED color: " + color)
             else:
                 # default to green (LED 1)
                 PP.setLED(addr, 1)
                 result['state'] = 1
-
         elif (plate_type == "DAQC2"):
             if ('color' in args):
                 color = args['color']
