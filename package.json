@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "dependencies": {
-    "vasync": "2.x.x"
+    "vasync": "^2.2.1"
   },
   "devDependencies": {},
   "scripts": {

@@ -152,7 +152,7 @@ def common_handler(PP, plate_type, addr, cmd, args):
                 else:
                     # default to green LED (1)
                     result['state'] = PP.getLED(addr, 1)
-            if (plate_type == 'TINKER'):
+            elif (plate_type == 'TINKER'):
                 # default to onboard LED (0)
                 result['state'] = PP.getLED(addr, 0)
             else:
