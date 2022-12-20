@@ -362,6 +362,9 @@ while True:
                 voltage = TINK.getADC(addr, channel)
                 resp['channel'] = channel
                 resp['voltage'] = voltage
+            elif(cmd == "getADCall"):
+                voltages = TINK.getADCall(addr)
+                resp['voltages'] = voltages
             elif(cmd == "getTEMP"):
                 bit = args['bit']
                 scale = args['scale']
