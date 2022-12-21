@@ -192,6 +192,8 @@ while True:
                     RP.relayOFF(addr, relay)
                 elif (cmd == "relayTOGGLE"):
                     RP.relayTOGGLE(addr, relay)
+                elif (cmd == "relaySTATE"):
+                    pass
                 state = RP.relaySTATE(addr)
                 this_state = (state >> (relay - 1)) & 1
                 resp['relay'] = relay
