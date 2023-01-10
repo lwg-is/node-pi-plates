@@ -35,7 +35,7 @@ function do_cmd(task, cb) {
                 cb(reply);
             } catch (e) {
                 console.log('invalid json received from python co-process: ' + line);
-                TODO: better error reporting/handling here
+                // TODO: better error reporting/handling here
                 cb();
             }
         });
