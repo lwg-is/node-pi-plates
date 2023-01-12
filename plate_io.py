@@ -314,11 +314,17 @@ while True:
                 resp = common_handler(TP, plate_type, addr, cmd, args)
             elif (cmd == "getTEMP"):
                 channel = args['channel']
-                value = TP.getTEMP(addr, channel)
+                if ('scale' in args):
+                    value = TP.getTEMP(addr, channel, args['scale'])
+                else:
+                    value = TP.getTEMP(addr, channel)
                 resp['channel'] = channel
                 resp['value'] = value
             elif (cmd == "getCOLD"):
-                value = TP.getCOLD(addr)
+                if ('scale' in args):
+                    value = TP.getCOLD(addr, args['scale'])
+                else:
+                    value = TP.getCOLD(addr)
                 resp['value'] = value
             elif (cmd == "ACTIVATE"):
                 TP.THERMOsPresent[addr] = 1
