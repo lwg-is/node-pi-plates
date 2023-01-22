@@ -326,6 +326,8 @@ while True:
                 else:
                     value = TP.getCOLD(addr)
                 resp['value'] = value
+            elif (cmd == "setTYPE"):
+                TP.setTYPE(addr, args['channel'], args['tc_type'])
             elif (cmd == "ACTIVATE"):
                 TP.THERMOsPresent[addr] = 1
                 TP.getCalVals(addr)
