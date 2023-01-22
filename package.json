@@ -1,6 +1,6 @@
 {
   "name": "pi-plates",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "control Pi-Plates from node",
   "main": "plates.js",
   "directories": {
