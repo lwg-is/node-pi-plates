@@ -28,9 +28,16 @@ def common_handler(PP, plate_type, addr, cmd, args):
     elif (cmd == "getVersion"):
         result['Version'] = PP.getVersion()
     elif (cmd == "getADDR"):
-        result['ADDR'] = PP.getADDR(addr)
+        if (plate_type == 'POWER24'):
+            result['ADDR'] = PP.getADDR()
+        else:
+            result['ADDR'] = PP.getADDR(addr)
     elif (cmd == "VERIFY"):
-        poll = PP.getADDR(addr)
+        if (plate_type == 'POWER24'):
+            poll = PP.getADDR()
+        else:
+            poll = PP.getADDR(addr)
+
         # the DAQC plate's getADDR method adds 8 to the address.
         if (plate_type == "DAQC"):
             poll = poll - 8
@@ -39,13 +46,31 @@ def common_handler(PP, plate_type, addr, cmd, args):
         else:
             result['state'] = 1
     elif (cmd == "RESET"):
-        if (plate_type == "DAQC"):
-            result['RESET'] = "RESET() Unavailable on DAQC"
+        if (plate_type in ['DAQC', 'POWER24']):
+            result['RESET'] = "RESET() Unavailable"
         else:
             PP.RESET(addr)
             result['RESET'] = "OK"
     elif (cmd == "setLED"):
-        if (plate_type == "DAQC"):
+        if (plate_type == "POWER24"):
+            if ('color' in args):
+                color = args['color']
+                if color in ['red', 'green', 'yellow', 'off']:
+                    if (color == 'red'):
+                        PP.setLED(0, 'RED')
+                    elif (color == 'green'):
+                        PP.setLED(0, 'GREEN')
+                    elif (color == 'yellow'):
+                        PP.setLED(0, 'YELLOW')
+                    elif (color == 'off'):
+                        PP.setLED(0, 'OFF')
+                    result['state'] = color
+                else:
+                    sys.stderr.write("unsupported POWERplate24 LED color: " + color)
+            else:
+                # default to green (LED 1)
+                PP.setLED(0, 'GREEN')
+        elif (plate_type == "DAQC"):
             if ('color' in args):
                 color = args['color']
                 if color in ['red', 'green', 'yellow', 'off']:
@@ -86,7 +111,11 @@ def common_handler(PP, plate_type, addr, cmd, args):
             PP.setLED(addr)
             result['state'] = 1
     elif (cmd == "clrLED"):
-        if (plate_type == "DAQC"):
+        if (plate_type == "POWER24"):
+            PP.setLED(0, 'off')
+            result['state'] = 0
+
+        elif (plate_type == "DAQC"):
             if ('color' in args):
                 color = args['color']
                 if (color == 'red'):
@@ -110,7 +139,10 @@ def common_handler(PP, plate_type, addr, cmd, args):
             PP.clrLED(addr)
             result['state'] = 0
     elif (cmd == "toggleLED"):
-        if (plate_type == "DAQC"):
+        if (plate_type == "POWER24"):
+            sys.stderr.write("LED toggle not supported on POWERplate24")
+            result['state'] = "UNKNOWN"
+        elif (plate_type == "DAQC"):
             if ('color' in args):
                 color = args['color']
                 if (color == 'red'):
@@ -480,6 +512,37 @@ while True:
                 resp['currents'] = readings
             else:
                 sys.stderr.write("unknown current cmd: " + cmd)
+            print(json.dumps(resp))
+        elif (plate_type == "POWER24"):
+            import piplates.POWERplate24 as POW
+            if (cmd in common_funcs):
+                resp = common_handler(POW, plate_type, addr, cmd, args)
+            elif (cmd == "getADC"):
+                channel = args['channel']
+                resp['channel'] = channel
+                if (channel == "getVin"):
+                    resp['voltage'] = POW.getVin(0)
+                elif (channel == "getHVin"):
+                    resp['voltage'] = POW.getHVin(0)
+                elif (channel == 0):
+                    resp['voltage'] = POW.getADC(0, 0)
+                elif (channel == 1):
+                    resp['voltage'] = POW.getADC(0, 1)
+                else:
+                    sys.stderr.write("unknown channel: " + channel)
+            elif ("fan" in cmd):
+                if (cmd == "fanON"):
+                    POW.fanON(0)
+                elif (cmd == "fanOFF"):
+                    POW.fanOFF(0)
+                elif (cmd == "fanSTATE"):
+                    pass
+                resp['state'] = POW.fanSTATE(0)
+            elif (cmd == "getPOWstatus"):
+                bits = POW.getPOWstatus(0)
+                resp['NO_AC'] = bits & 1 != 0
+                resp['LOW_BAT'] = bits & 2 != 0
+                resp['LOW_DC_IN'] = bits & 4 != 0
             print(json.dumps(resp))
         else:
             sys.stderr.write("unknown plate_type: " + plate_type)

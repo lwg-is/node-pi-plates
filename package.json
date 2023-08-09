@@ -1,6 +1,6 @@
 {
   "name": "pi-plates",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "control Pi-Plates from node",
   "main": "plates.js",
   "directories": {
@@ -33,6 +33,8 @@
     "ADCplate",
     "DIGIplate",
     "CURRENTplate",
+    "POWERplate24",
+    "UPS",
     "thermocouple",
     "ds18b20",
     "Pi-Plates",

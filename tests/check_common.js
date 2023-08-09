@@ -43,6 +43,10 @@ switch (plate_type) {
         const CURRENTplate = require('../CURRENTplate');
         var PP = new CURRENTplate(plate_id);
         break;
+    case 'POWER24':
+        const POWERplate24 = require('../POWERplate24');
+        var PP = new POWERplate24(plate_id);
+        break;
     default:
 }
 
