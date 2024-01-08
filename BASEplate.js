@@ -3,7 +3,7 @@ const readline = require('readline');
 const { spawn } = require('child_process');
 const assert = require('assert');
 
-let child = spawn('python3', ['-u', __dirname + '/plate_io.py']);
+let child = spawn(__dirname + '/env/bin/python3', ['-u', __dirname + '/plate_io.py']);
 
 let child_status = 0;
 

@@ -1,6 +1,6 @@
 {
   "name": "pi-plates",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "control Pi-Plates from node",
   "main": "plates.js",
   "directories": {
@@ -13,7 +13,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "pep8": "pycodestyle plate_io.py",
-    "jscs": "jscs -c .jscsrc *.js"
+    "jscs": "jscs -c .jscsrc *.js",
+    "preinstall": "python3 -m venv --system-site-packages env",
+    "install": "env/bin/pip3 install pi-plates"
   },
   "repository": {
     "type": "git",
