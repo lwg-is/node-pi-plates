@@ -1,2 +1,3 @@
 control Pi-Plates from node
-***requires python 3.x via 'python3' command***
+# Prerequisite - you must install the python3-venv package
+This is included in Raspberry Pi OS 'Bookworm' by default, but not previous releases
