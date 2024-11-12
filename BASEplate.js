@@ -3,46 +3,77 @@ const readline = require('readline');
 const { spawn } = require('child_process');
 const assert = require('assert');
 
-let child = spawn(__dirname + '/env/bin/python3', ['-u', __dirname + '/plate_io.py']);
 
-let child_status = 0;
+class PlateIO {
+    constructor () {
+        this.statuses = [];
 
-child.on('error', (err) => {
-    console.log('child error: ' + err);
-});
+        this.create_process();
+    }
 
-child.on('exit', (code, signal) => {
-    console.log(`code: ${code} signal: ${signal}`);
-    child_status = code;
-});
+    create_process () {
+        this.process = spawn(__dirname + '/env/bin/python3', ['-u', __dirname + '/plate_io.py']);
+        this.statuses.push(0);
 
-child.stderr.on('data', (data) => {
-    console.log('stderr: ' + data);
-});
+        let exec_count = this.get_execution_count();
 
-const rl = readline.createInterface({
-    input: child.stdout
-});
+        console.log(`Starting pi-plates helper process (attempt ${exec_count})`);
 
-function do_cmd(task, cb) {
-    if (!child_status) {
-        const cmd_str = JSON.stringify(task) + '\n';
-        child.stdin.write(cmd_str);
-        assert.equal(rl.listenerCount('line'), 0);
-        rl.once('line', (line) => {
-            try {
-                const reply = JSON.parse(line);
-                cb(reply);
-            } catch (e) {
-                console.log('invalid json received from python co-process: ' + line);
-                // TODO: better error reporting/handling here
-                cb();
-            }
+        this.process.on('error', (err) => {
+            console.log('child error: ' + err);
+
+            setTimeout(() => this.create_process(), 1000);
         });
+
+        this.process.on('exit', (code, signal) => {
+            console.log(`pi-plates helper process exited with code: ${code} and signal: ${signal}`);
+            this.statuses[this.statuses.length - 1] = code;
+
+            setTimeout(() => this.create_process(), 1000);
+        });
+
+        this.process.stderr.on('data', (data) => {
+            console.log('stderr: ' + data);
+        });
+
+        this.rl = readline.createInterface({
+            input: this.process.stdout
+        });
+    }
+
+    get_execution_count () {
+        return this.statuses.length;
+    }
+
+    get_status () {
+        return this.statuses[this.statuses.length - 1];
+    }
+
+    kill () {
+        this.process.kill();
+    }
+
+    do_cmd (task, cb) {
+        if (!this.get_status()) {
+            const cmd_str = JSON.stringify(task) + '\n';
+            this.process.stdin.write(cmd_str);
+            assert.equal(this.rl.listenerCount('line'), 0);
+            this.rl.once('line', (line) => {
+                try {
+                    const reply = JSON.parse(line);
+                    cb(reply);
+                } catch (e) {
+                    console.log('invalid json received from python co-process: ' + line);
+                    cb();
+                }
+            });
+        }
     }
 }
 
-const queue = vasync.queue(do_cmd, 1);
+let plate_io = new PlateIO();
+
+const queue = vasync.queue((task, cb) => plate_io.do_cmd(task, cb), 1);
 
 class BASEplate {
     constructor (addr, plate_type) {
@@ -65,6 +96,7 @@ class BASEplate {
 
     // Updates this.plate_status.
     update_status () {
+        let child_status = plate_io.get_status();
         if (child_status) {
             this.plate_status = child_status;
         } else {
@@ -84,6 +116,7 @@ class BASEplate {
             });
         }
     }
+
     send (obj, receive_cb) {
         // send a request to this plate using the form:
         // {cmd: <pi-plate command>, args: {<command-specific args>}
@@ -92,12 +125,13 @@ class BASEplate {
         obj['plate_type'] = this.plate_type;
         obj['addr'] = this.addr;
 
-        if (!child_status) {
+        if (!plate_io.get_status()) {
             this.queue.push(obj, receive_cb);
         }
     }
+
     shutdown () {
-        child.kill();
+        plate_io.kill();
     }
 }
 
