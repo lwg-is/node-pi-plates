@@ -17,7 +17,7 @@ class PlateIO {
 
         let exec_count = this.get_execution_count();
 
-        console.log(`Starting pi-plates helper process (attempt ${exec_count})`);
+        console.log(`Starting pi-plates helper process (count ${exec_count})`);
 
         this.process.on('error', (err) => {
             console.log('child error: ' + err);
