@@ -17,7 +17,7 @@ class PlateIO {
 
         let exec_count = this.get_execution_count();
 
-        console.log(`Starting pi-plates helper process (count ${exec_count})`);
+        console.log(`Starting pi-plates python co-process (count ${exec_count})`);
 
         this.process.on('error', (err) => {
             console.log('child error: ' + err);
@@ -26,7 +26,7 @@ class PlateIO {
         });
 
         this.process.on('exit', (code, signal) => {
-            console.log(`pi-plates helper process exited with code: ${code} and signal: ${signal}`);
+            console.log(`pi-plates python co-process exited with code: ${code} and signal: ${signal}`);
             this.statuses[this.statuses.length - 1] = code;
 
             setTimeout(() => this.create_process(), 1000);
@@ -63,7 +63,7 @@ class PlateIO {
                     const reply = JSON.parse(line);
                     cb(reply);
                 } catch (e) {
-                    console.log('invalid json received from python co-process: ' + line);
+                    console.log('invalid json received from pi-plates python co-process: ' + line);
                     cb();
                 }
             });
