@@ -3,7 +3,6 @@ const readline = require('readline');
 const { spawn } = require('child_process');
 const assert = require('assert');
 
-
 class PlateIO {
     constructor () {
         this.statuses = [];
@@ -22,6 +21,7 @@ class PlateIO {
         this.process.on('error', (err) => {
             console.log('child error: ' + err);
 
+            this.queue.close();
             setTimeout(() => this.create_process(), 1000);
         });
 
@@ -29,6 +29,7 @@ class PlateIO {
             console.log(`pi-plates python co-process exited with code: ${code} and signal: ${signal}`);
             this.statuses[this.statuses.length - 1] = code;
 
+            this.queue.close();
             setTimeout(() => this.create_process(), 1000);
         });
 
@@ -39,6 +40,8 @@ class PlateIO {
         this.rl = readline.createInterface({
             input: this.process.stdout
         });
+
+        this.queue = vasync.queue((task, cb) => this.do_cmd(task, cb), 1);
     }
 
     get_execution_count () {
@@ -73,13 +76,10 @@ class PlateIO {
 
 let plate_io = new PlateIO();
 
-const queue = vasync.queue((task, cb) => plate_io.do_cmd(task, cb), 1);
-
 class BASEplate {
     constructor (addr, plate_type) {
         this.addr = addr;
         this.plate_type = plate_type;
-        this.queue = queue;
 
         /* plate_status stores information about whether or not this plate can currently
          * be used, or if there is an issue:
@@ -125,8 +125,8 @@ class BASEplate {
         obj['plate_type'] = this.plate_type;
         obj['addr'] = this.addr;
 
-        if (!plate_io.get_status()) {
-            this.queue.push(obj, receive_cb);
+        if (!plate_io.get_status() && !plate_io.queue.closed) {
+            plate_io.queue.push(obj, receive_cb);
         }
     }
 
