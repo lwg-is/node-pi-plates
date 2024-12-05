@@ -59,17 +59,21 @@ class PlateIO {
     do_cmd (task, cb) {
         if (!this.get_status()) {
             const cmd_str = JSON.stringify(task) + '\n';
-            this.process.stdin.write(cmd_str);
-            assert.equal(this.rl.listenerCount('line'), 0);
-            this.rl.once('line', (line) => {
-                try {
-                    const reply = JSON.parse(line);
-                    cb(reply);
-                } catch (e) {
-                    console.log('invalid json received from pi-plates python co-process: ' + line);
-                    cb();
-                }
-            });
+            try {
+                this.process.stdin.write(cmd_str);
+                assert.equal(this.rl.listenerCount('line'), 0);
+                this.rl.once('line', (line) => {
+                    try {
+                        const reply = JSON.parse(line);
+                        cb(reply);
+                    } catch (e) {
+                        console.log('invalid json received from pi-plates python co-process: ' + line);
+                        cb();
+                    }
+                });
+            } catch (e) {
+                console.log('error writing to pi-plates python co-process');
+            }
         }
     }
 }
